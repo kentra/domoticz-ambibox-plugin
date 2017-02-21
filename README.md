@@ -1,6 +1,6 @@
 # domoticz-ambibox-plugin
 
-Â### Whas this?
+### Whas this?
 This is a plugin for domoticz that connects with the API of Ambibox(http://www.ambibox.ru/en) and lets you set pre defined colors from Domoticz interface
 
 ### How to install?
