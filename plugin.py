@@ -1,7 +1,7 @@
 # AmbiBox hardware for Domoticz
 #
 # Author: kentra
-#
+# Tested on Domoticz V3.6708
 """
 <plugin key="Ambibox" name="Ambibox - Ambient light" author="kentra" version="1.0.0" wikilink="http://www.domoticz.com/wiki/plugins/plugin.html" externallink="https://www.google.com/">
     <params>
