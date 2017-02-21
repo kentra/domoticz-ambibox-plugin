@@ -6,3 +6,6 @@ This is a plugin for domoticz that connects with the API of Ambibox(http://www.a
 ### How to install?
 Simple. Just clone this repository and place this folder(domoticz-ambibox-plugin) in your domoticz installation plugin directory(linux: "~/Domoticz/plugins/", Windwos: "C:\Program Files (x86)\Domoticz\plugin\").
 The you restart Domoticz and set up your Ambibox connection in the Hardware meny in Domoticz.
+
+### compatibility
+Only tested on Domoticz BETA branch V3.6708
