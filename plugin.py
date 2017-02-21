@@ -33,13 +33,13 @@ class BasePlugin:
         Domoticz.Log("Devices created.")
 
     def onStop(self):
-        #Domoticz.Log("onStop called")
+        Domoticz.Log("onStop called")
 
     def onConnect(self, Status, Description):
-        #Domoticz.Log("onConnect called")
+        Domoticz.Log("onConnect called")
 
     def onMessage(self, Data, Status, Extra):
-        #Domoticz.Log("onMessage called")
+        Domoticz.Log("onMessage called")
 
     def onCommand(self, Unit, Command, Level, Hue):
         Domoticz.Log("onCommand called for Unit " + str(Unit) + ": Parameter '" + str(Command) + "', Level: " + str(Level))
@@ -76,10 +76,10 @@ class BasePlugin:
             ambibox.setColor('0', '255','0')
 
     def onNotification(self, Data):
-        #Domoticz.Log("onNotification: " + str(Data))
+        Domoticz.Log("onNotification: " + str(Data))
 
     def onDisconnect(self):
-        #Domoticz.Log("onDisconnect called")
+        Domoticz.Log("onDisconnect called")
 
     def onHeartbeat(self):
         global running
