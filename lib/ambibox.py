@@ -18,9 +18,9 @@ def disconnect(num=206):
         payload += str(i) + '-0,0,0;'
     tn.write(payload.encode())
     tn.write(b'\n')
-    tn.write(b'unlock\n')
-    tn.write(b'exit\n')
-    tn.close()
+    #tn.write(b'unlock\n')
+    #tn.write(b'exit\n')
+    #tn.close()
 
 def ping():
     try:
