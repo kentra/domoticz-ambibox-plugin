@@ -15,12 +15,13 @@ def setColor(red='255', green='0', blue='100', num=206):
 def disconnect(num=206):
     payload = 'setcolor:'
     for i in range(1, num):
-        payload += str(i) + '-0,0,0;'
+        payload += str(i) + '-000,000,000;'
     tn.write(payload.encode())
     tn.write(b'\n')
-    #tn.write(b'unlock\n')
-    #tn.write(b'exit\n')
-    #tn.close()
+    time.sleep(1)
+    tn.write(b'unlock\n')
+    tn.write(b'exit\n')
+    tn.close()
 
 def ping():
     try:
