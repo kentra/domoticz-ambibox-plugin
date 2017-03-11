@@ -12,6 +12,7 @@
 """
 import Domoticz
 import base64
+import colorsys
 from lib import ambibox
 def stringToBase64(s):
     return base64.b64encode(s.encode('utf-8')).decode("utf-8")
@@ -26,10 +27,12 @@ class BasePlugin:
 
     def onStart(self):
         Domoticz.Log("onStart called")
-        
-        Options = "LevelActions:"+stringToBase64("||||||")+";LevelNames:"+stringToBase64("Off|Blue|Purple|Cyan|Red|White|Green")
-
-        Domoticz.Device(Name="AmbientLight", Unit=1, TypeName="Selector Switch", Options=Options).Create()
+        # RGB Switch: Type=241, SubType=2, SwitchType=0
+        #Options = "LevelActions:"+stringToBase64("||||||")+";LevelNames:"+stringToBase64("Off|Blue|Purple|Cyan|Red|White|Green")
+        #Domoticz.Device(Name="AmbientLight", Unit=2, TypeName="Selector Switch", Options=Options).Create()
+        global colorWheel
+        colorWheel = Domoticz.Device(Name="AmbientLight", Unit=2, Type=241, Subtype=2)
+        colorWheel.Create()
         Domoticz.Log("Devices created.")
 
     def onStop(self):
@@ -42,38 +45,61 @@ class BasePlugin:
         Domoticz.Log("onMessage called")
 
     def onCommand(self, Unit, Command, Level, Hue):
-        Domoticz.Log("onCommand called for Unit " + str(Unit) + ": Parameter '" + str(Command) + "', Level: " + str(Level))
+        Domoticz.Log("onCommand called for Unit " + str(Unit) + ": Parameter '" + str(Command) + "', Level: " + str(Level) + ", Hue: " + str(Hue))
         Domoticz.Log("Connecting to ambibox:" + Parameters['Address'] + ":" + Parameters['Port'])
-        if Level != 0:
+        global colorWheel
+        if str(Command) == 'On':
             ambibox.connect(Parameters['Address'], Parameters['Port'])
-        if Level == 0:
+            colorWheel.Update(nValue=1, sValue=str(Command), SignalLevel=50, Image=8)
+            global running
+            #running = '1'
+        if str(Command) == 'Off':
+            colorWheel.Update(nValue=0, sValue=str(Command), SignalLevel=50, Image=8)
             ambibox.disconnect()
             global running
-            running = "0"
-        #Blue  
-        elif Level == 10:
-            running = '0,0,255'
-            ambibox.setColor('0', '0','255')
-        #Purple
-        elif Level == 20:
-            running = '255,0,255'
-            ambibox.setColor('255', '0','255')
-        #Cyan
-        elif Level == 30:
-            running = '0,200,255'
-            ambibox.setColor('0', '200','255')
-        #Red
-        elif Level == 40:
-            running = '255,0,0'
-            ambibox.setColor('255', '0','0')
-        #White
-        elif Level == 50:
-            running = '255,255,255'
-            ambibox.setColor('255', '255','255')
-        #Green
-        elif Level == 60:
-            running = '0,255,0'
-            ambibox.setColor('0', '255','0')
+            running = '0'
+        if str(Command) == 'Set Color':
+            color = int(Level)
+        if str(Command) == 'Set Brightness':
+            brightness = int(Level)
+        try:
+            global brightness
+            global color
+            rgb = colorsys.hls_to_rgb(color / 359, brightness, 1)
+            Domoticz.Log(str(rgb))
+            ambibox.setColor(str(int(rgb[1])), str(int(rgb[2])), str(int(rgb[0])))
+        except KeyboardInterrupt:
+            Domoticz.Log("Failed to convert color from HLS to RGB")
+
+        #if Level != 0:
+        #    ambibox.connect(Parameters['Address'], Parameters['Port'])
+        #if Level == 0:
+        #    global running
+        #    running = "0"
+        ##Blue
+        #elif Level == 10:
+        #    running = '0,0,255'
+        #    ambibox.setColor('0', '0','255')
+        ##Purple
+        #elif Level == 20:
+        #    running = '255,0,255'
+        #    ambibox.setColor('255', '0','255')
+        ##Cyan
+        #elif Level == 30:
+        #    running = '0,200,255'
+        #    ambibox.setColor('0', '200','255')
+        ##Red
+        #elif Level == 40:
+        #    running = '255,0,0'
+        #    ambibox.setColor('255', '0','0')
+        ##White
+        #elif Level == 50:
+        #    running = '255,255,255'
+        #    ambibox.setColor('255', '255','255')
+        ##Green
+        #elif Level == 60:
+        #    running = '0,255,0'
+        #    ambibox.setColor('0', '255','0')
 
     def onNotification(self, Data):
         Domoticz.Log("onNotification: " + str(Data))
