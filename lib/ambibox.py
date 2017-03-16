@@ -1,10 +1,15 @@
 import telnetlib
 import time
 def connect(ip, port=3636):
-    global tn
-    tn = telnetlib.Telnet(ip, port, 3600)
-    tn.read_until(b'')
-    tn.write(b'lock\n')
+    try:
+        global tn
+        tn = telnetlib.Telnet(ip, port, 3600)
+        tn.read_until(b'')
+        tn.write(b'lock\n')
+        return True
+    except:
+        return False
+        
 def setColor(red='255', green='0', blue='100', num=206):
     payload = 'setcolor:'
     for i in range(1, num):
@@ -25,6 +30,7 @@ def disconnect(num=206):
 
 def ping():
     try:
-        tn.write(b'\n\r')
+        tn.write(b'\r\ngetstatusapi\n\r')
+        return True
     except:
-        return 'Not Connected'
+        return False

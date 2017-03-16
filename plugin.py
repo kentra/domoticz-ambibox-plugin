@@ -7,6 +7,12 @@
     <params>
         <param field="Address" label="IP Address" width="200px" required="true" default="127.0.0.1"/>
         <param field="Port" label="Port" width="30px" required="true" default="3636"/>
+        <param field="Mode1" label="Debug" width="75px">
+            <options>
+                <option label="True" value="True"/>
+                <option label="False" value="False"  default="true" />
+            </options>
+        </param>
     </params>
 </plugin>
 """
@@ -18,19 +24,19 @@ def stringToBase64(s):
     return base64.b64encode(s.encode('utf-8')).decode("utf-8")
 
 class BasePlugin:
-    enabled = False
-    global running
-    running = '0'
+    global lastColor
+    #lastColor = '0'
     def __init__(self):
         #self.var = 123
         return
 
     def onStart(self):
         Domoticz.Log("onStart called")
-        global colorWheel
-        colorWheel = Domoticz.Device(Name="AmbientLight", Unit=2, Type=241, Subtype=2)
-        colorWheel.Create()
+        global colorPallet
+        colorPallet = Domoticz.Device(Name="AmbientLight", Unit=2, Switchtype=7, Type=241, Subtype=2)
+        colorPallet.Create()
         Domoticz.Log("Devices created.")
+        # global ambiConnect
 
     def onStop(self):
         Domoticz.Log("onStop called")
@@ -42,33 +48,44 @@ class BasePlugin:
         Domoticz.Log("onMessage called")
 
     def onCommand(self, Unit, Command, Level, Hue):
-        Domoticz.Log("onCommand called for Unit " + str(Unit) + ": Parameter '" + str(Command) + "', Level: " + str(Level) + ", Hue: " + str(Hue))
-        Domoticz.Log("Connecting to ambibox:" + Parameters['Address'] + ":" + Parameters['Port'])
-        global colorWheel
+        global colorPallet
+        global lastColor
+        Domoticz.Log(str(Command))
+        if not ambibox.ping():
+            # Connect
+            if ambibox.connect(Parameters['Address'], Parameters['Port']):
+                Domoticz.Log('Connected to: ' + Parameters['Address'] + ':' + Parameters['Port'])
+            else:
+                Domoticz.Error('Could not connect to ' + Parameters['Address'] + ':' + Parameters['Port'])
         if str(Command) == 'On':
-            ambibox.connect(Parameters['Address'], Parameters['Port'])
-            colorWheel.Update(nValue=1, sValue=str(Command), SignalLevel=50, Image=8)
-            global running
-            #running = '1'
+            colorPallet.Update(nValue=1, sValue=str(Command), SignalLevel=50, Image=8)
+            if lastColor != '0':
+                ambibox.setColor(lastColor.split(',')[0], lastColor.split(',')[1], lastColor.split(',')[2])
+            global lastColor
+            #lastColor = '1'
         if str(Command) == 'Off':
-            colorWheel.Update(nValue=0, sValue=str(Command), SignalLevel=50, Image=8)
+            colorPallet.Update(nValue=0, sValue=str(Command), SignalLevel=50, Image=8)
             ambibox.disconnect()
-            global running
-            running = '0'
+            global lastColor
+            #lastColor = '0'
         if str(Command) == 'Set Color':
             color = int(Level)
         if str(Command) == 'Set Brightness':
             brightness = int(Level)
-        try:
-            global brightness
-            global color
-            rgb = colorsys.hls_to_rgb(color / 359, brightness, 1)
-            Domoticz.Log(str(rgb))
-            ambibox.setColor(str(int(rgb[1])), str(int(rgb[2])), str(int(rgb[0])))
-            global running
-            running = str(int(rgb[1])) + ',' + str(int(rgb[2])) + ',' + str(int(rgb[0]))
-        except KeyboardInterrupt:
-            Domoticz.Log("Failed to convert color from HLS to RGB")
+        if str(Command) == 'Set Level' and color:
+            brightness = int(Level)
+        #Set Color
+        if str(Command) not in ['On', 'Off', 'Set Color'] and ambibox.ping():
+            try:
+                global brightness
+                global color
+                rgb = colorsys.hls_to_rgb(color / 359, brightness, 1)
+                ambibox.setColor(str(int(rgb[1])), str(int(rgb[2])), str(int(rgb[0])))
+                global lastColor
+                lastColor = str(int(rgb[1])) + ',' + str(int(rgb[2])) + ',' + str(int(rgb[0]))
+                Domoticz.Debug('Red: ' + str(rgb[0])  + ' Green: ' + str(rgb[1]) + ' Blue: ' + str(rgb[2]))
+            except:
+                Domoticz.Error("Failed to set color")
 
     def onNotification(self, Data):
         Domoticz.Log("onNotification: " + str(Data))
@@ -77,11 +94,12 @@ class BasePlugin:
         Domoticz.Log("onDisconnect called")
 
     def onHeartbeat(self):
-        global running
-        if running != '0':
-            Domoticz.Log("Ambibox - Ping")
-            ambibox.setColor(running.split(',')[0], running.split(',')[1], running.split(',')[2])
-
+        global lastColor
+        if ambibox.ping():
+            Domoticz.Debug('Keepalive: Keeping connection alive')
+            ambibox.setColor(lastColor.split(',')[0], lastColor.split(',')[1], lastColor.split(',')[2])
+        elif not ambibox.ping():
+            Domoticz.Debug('Keepalive: No connection')
 
 global _plugin
 _plugin = BasePlugin()
